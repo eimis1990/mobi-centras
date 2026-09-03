@@ -29,9 +29,10 @@ export const unauthorized = () => new Response('unauthorized', { status: 401 })
 
 // ---- storage: private Vercel Blob in production, .data/ files in dev ------------------
 export class Conflict extends Error {}
-const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN
+// Two ways Vercel provides Blob access: a fixed token, or a store id resolved with the function's runtime OIDC identity.
+const useBlob = !!(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID)
 const requireStorage = () => {
-  if (!useBlob && process.env.VERCEL) throw new Error('Blob store is not connected: BLOB_READ_WRITE_TOKEN is missing. Attach a Blob store to the Vercel project and redeploy.')
+  if (!useBlob && process.env.VERCEL) throw new Error('Blob store is not connected: neither BLOB_STORE_ID nor BLOB_READ_WRITE_TOKEN is set. Attach a Blob store to the Vercel project and redeploy.')
 }
 const dataDir = path.resolve(process.cwd(), '.data')
 const etagOf = (s: string) => createHash('md5').update(s).digest('hex').slice(0, 16)
