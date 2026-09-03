@@ -26,7 +26,7 @@ export type Settings = {
   followUpDays: number
   staleDays: number
 }
-export const TEMPLATE_LABEL: Record<TemplateKey, string> = { arrived: 'Product arrived', repairReady: 'Repair ready', reminder: 'Reminder' }
+export const TEMPLATE_KEYS: TemplateKey[] = ['arrived', 'repairReady', 'reminder']
 export const defaultSettings: Settings = {
   company: { name: 'MobiCentras', phone: '+37067566544', address: 'Naujoji g. 3, Alytus', smsSender: 'MobiCentras' },
   templates: {
@@ -64,19 +64,14 @@ export const daysSince = (iso: string, now = Date.now()) => Math.floor((now - Da
 const DONE: Status[] = ['picked_up', 'cancelled', 'closed']
 export const isDone = (o: Order) => DONE.includes(o.status)
 
-export const STATUS_LABEL: Record<Status, string> = {
-  ordered: 'Ordered', arrived: 'Arrived', notified: 'Notified', picked_up: 'Picked up', cancelled: 'Cancelled',
-  open: 'Open', contacted: 'Contacted', closed: 'Closed',
-}
-
-export type Action = { label: string; status: Status; primary?: boolean }
+export type Action = { label: `action.${string}`; status: Status; primary?: boolean }
 export const actions = (o: Order): Action[] => {
   switch (o.status) {
-    case 'ordered': return [{ label: 'Mark arrived', status: 'arrived', primary: true }, { label: 'Cancel', status: 'cancelled' }]
-    case 'arrived': return [{ label: 'Notify', status: 'notified', primary: true }, { label: 'Cancel', status: 'cancelled' }]
-    case 'notified': return [{ label: 'Picked up', status: 'picked_up', primary: true }, { label: 'Notify again', status: 'notified' }, { label: 'Cancel', status: 'cancelled' }]
-    case 'open': return [{ label: 'Mark contacted', status: 'contacted', primary: true }, { label: 'Close', status: 'closed' }]
-    case 'contacted': return [{ label: 'Close', status: 'closed', primary: true }]
+    case 'ordered': return [{ label: 'action.markArrived', status: 'arrived', primary: true }, { label: 'action.cancel', status: 'cancelled' }]
+    case 'arrived': return [{ label: 'action.notify', status: 'notified', primary: true }, { label: 'action.cancel', status: 'cancelled' }]
+    case 'notified': return [{ label: 'action.pickedUp', status: 'picked_up', primary: true }, { label: 'action.notifyAgain', status: 'notified' }, { label: 'action.cancel', status: 'cancelled' }]
+    case 'open': return [{ label: 'action.markContacted', status: 'contacted', primary: true }, { label: 'action.close', status: 'closed' }]
+    case 'contacted': return [{ label: 'action.close', status: 'closed', primary: true }]
     default: return []
   }
 }

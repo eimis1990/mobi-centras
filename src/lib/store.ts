@@ -30,8 +30,8 @@ export function useStore() {
 
   const signIn = async (password: string): Promise<string | null> => {
     const r = await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })
-    if (r.status === 401) return 'Wrong password.'
-    if (!r.ok) return 'Could not sign in. Try again.'
+    if (r.status === 401) return 'wrong'
+    if (!r.ok) return 'failed'
     await load()
     return null
   }

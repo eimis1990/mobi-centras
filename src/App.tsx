@@ -4,6 +4,8 @@ import { PanelLeftClose, PanelLeftOpen, AlertTriangle } from 'lucide-react'
 import { SidebarNav } from './components/SidebarNav'
 import { SearchOverlay } from './components/SearchOverlay'
 import { NotifyDialog } from './components/NotifyDialog'
+import { ThemeSwitch, useTheme } from './components/ThemeSwitch'
+import { LangToggle } from './components/LangToggle'
 import Dashboard from './pages/Dashboard'
 import Orders from './pages/Orders'
 import Customers from './pages/Customers'
@@ -11,12 +13,15 @@ import Settings from './pages/Settings'
 import SignIn from './pages/SignIn'
 import { Placeholder } from './pages/Placeholder'
 import { useStore } from './lib/store'
+import { useT, type TKey } from './lib/i18n'
 import { buckets, transition, type Order, type Settings as SettingsT, type Status, type Store } from './lib/orders'
 
-const titles: Record<string, string> = { dashboard: 'Dashboard', orders: 'Orders', customers: 'Customers', settings: 'Settings' }
-const saveLabel = { idle: '', saving: 'Saving…', saved: 'Saved', error: 'Could not save', conflict: 'Changed elsewhere, reloaded' }
+const titleKey: Record<string, TKey> = { dashboard: 'nav.dashboard', orders: 'nav.orders', customers: 'nav.customers', settings: 'nav.settings' }
+const saveKey = { idle: null, saving: 'app.saving', saved: 'app.saved', error: 'app.saveError', conflict: 'app.conflict' } as const
 
 export default function App() {
+  const { t, lang, setLang } = useT()
+  const { theme, setTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(true)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [notifying, setNotifying] = useState<Order | null>(null)
@@ -55,12 +60,26 @@ export default function App() {
   const saveSettings = (settings: SettingsT) => update(s => ({ ...s, settings }))
   const importStore = (next: Store) => update(() => next)
 
-  if (authed === false) return <SignIn onSignIn={signIn} />
+  const controls = (
+    <div className="flex items-center gap-3">
+      <LangToggle lang={lang} onChange={setLang} label={t('app.language')} />
+      <ThemeSwitch theme={theme} onChange={setTheme} label={t('app.theme')} />
+    </div>
+  )
+
+  if (authed === false) {
+    return (
+      <>
+        <div className="fixed right-6 top-6 z-20">{controls}</div>
+        <SignIn onSignIn={signIn} />
+      </>
+    )
+  }
 
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-card">
       <div className={`h-full transition-all duration-300 ease-in-out shrink-0 overflow-hidden bg-card/50 border-r border-border/50 ${isOpen ? 'w-[260px] opacity-100' : 'w-0 opacity-0 border-none'}`}>
-        <SidebarNav className="w-[260px] border-none bg-transparent" activeId={activeId} onSelect={handleSelect} company="MobiCentras" subtitle="Alytus" ordersBadge={toNotify} />
+        <SidebarNav className="w-[260px] border-none bg-transparent" activeId={activeId} onSelect={handleSelect} company="MobiCentras" subtitle="Alytus" ordersBadge={toNotify} t={t} />
       </div>
 
       <div className="flex-1 bg-black/[0.02] dark:bg-white/[0.02] flex flex-col min-w-0">
@@ -70,24 +89,25 @@ export default function App() {
           </button>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>MobiCentras</span><span>/</span>
-            <span className="font-medium text-foreground">{titles[activeId] ?? 'Not found'}</span>
+            <span className="font-medium text-foreground">{titleKey[activeId] ? t(titleKey[activeId]) : t('app.notFound')}</span>
           </div>
           <span className={`ml-auto flex items-center gap-1.5 text-[12px] transition-opacity ${saveState === 'idle' ? 'opacity-0' : 'opacity-100'} ${saveState === 'error' || saveState === 'conflict' ? 'text-danger' : 'text-muted-foreground'}`}>
             {(saveState === 'error' || saveState === 'conflict') && <AlertTriangle className="w-3.5 h-3.5" strokeWidth={1.75} />}
-            {saveLabel[saveState]}
+            {saveKey[saveState] ? t(saveKey[saveState]) : ''}
           </span>
+          {controls}
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 md:p-8">
           {!store ? (
-            <p className="text-[13px] text-muted-foreground">{saveState === 'error' ? 'Could not load data.' : 'Loading…'}</p>
+            <p className="text-[13px] text-muted-foreground">{saveState === 'error' ? t('app.loadError') : t('app.loading')}</p>
           ) : (
             <Routes>
               <Route path="/" element={<Dashboard orders={orders} settings={store.settings} onAction={act} onOpenOrders={f => navigate(`/orders?filter=${f}`)} />} />
               <Route path="/orders" element={<Orders orders={orders} onSave={saveOrder} onDelete={deleteOrder} onAction={act} />} />
               <Route path="/customers" element={<Customers orders={orders} />} />
               <Route path="/settings" element={<Settings store={store} onSave={saveSettings} onImport={importStore} />} />
-              <Route path="*" element={<Placeholder title="Page not found" />} />
+              <Route path="*" element={<Placeholder title={t('app.pageNotFound')} />} />
             </Routes>
           )}
         </div>

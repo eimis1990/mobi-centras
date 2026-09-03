@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Download, Upload, Building2, MessageSquareText, SlidersHorizontal, Database, KeyRound, CheckCircle2 } from 'lucide-react'
-import { isDone, normalizeSettings, renderSms, SMS_PLACEHOLDERS, TEMPLATE_LABEL, type Settings as SettingsT, type Store, type TemplateKey } from '../lib/orders'
+import { isDone, normalizeSettings, renderSms, SMS_PLACEHOLDERS, TEMPLATE_KEYS, type Settings as SettingsT, type Store, type TemplateKey } from '../lib/orders'
+import { useT, type TKey } from '../lib/i18n'
 
 type Props = { store: Store; onSave: (s: SettingsT) => void; onImport: (s: Store) => void }
 
@@ -29,6 +30,7 @@ const smsSegments = (text: string) => Math.max(1, Math.ceil(text.length / (/[^\x
 type TwilioStatus = { configured: boolean; sidLast4?: string; from?: string; savedAt?: string }
 
 function TwilioCard({ sender, testTo }: { sender: string; testTo: string }) {
+  const { t, locale } = useT()
   const [status, setStatus] = useState<TwilioStatus | null>(null)
   const [sid, setSid] = useState('')
   const [token, setToken] = useState('')
@@ -43,12 +45,12 @@ function TwilioCard({ sender, testTo }: { sender: string; testTo: string }) {
   const save = async () => {
     setBusy('save'); setMsg(null)
     const r = await fetch('/api/twilio', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid: sid.trim(), token: token.trim(), from: from.trim() }) })
-    if (r.ok) { setStatus(await r.json()); setSid(''); setToken(''); setFrom(''); setEditing(false); setMsg({ ok: true, text: 'Verified with Twilio and saved.' }) }
+    if (r.ok) { setStatus(await r.json()); setSid(''); setToken(''); setFrom(''); setEditing(false); setMsg({ ok: true, text: t('set.twilioSaved') }) }
     else setMsg({ ok: false, text: await r.text() })
     setBusy(null)
   }
   const remove = async () => {
-    if (!confirm('Remove the stored Twilio credentials? SMS sending will stop until new ones are added.')) return
+    if (!confirm(t('set.removeConfirm'))) return
     setBusy('remove'); setMsg(null)
     const r = await fetch('/api/twilio', { method: 'DELETE' })
     if (r.ok) setStatus(await r.json())
@@ -56,24 +58,25 @@ function TwilioCard({ sender, testTo }: { sender: string; testTo: string }) {
   }
   const test = async () => {
     setBusy('test'); setMsg(null)
-    const r = await fetch('/api/sms', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ to: testTo, message: `Test SMS from MobiCentras. Everything works.`, sender }) })
-    setMsg(r.ok ? { ok: true, text: `Test SMS sent to ${testTo}.` } : { ok: false, text: await r.text() })
+    const r = await fetch('/api/sms', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ to: testTo, message: t('set.testBody'), sender }) })
+    setMsg(r.ok ? { ok: true, text: t('set.testSent', { to: testTo }) } : { ok: false, text: await r.text() })
     setBusy(null)
   }
 
+  const btn = 'h-8 px-3 rounded-md border border-border text-[12px] font-medium hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50'
   return (
-    <Card icon={KeyRound} title="Twilio account" hint="Credentials are verified, encrypted and stored on the server. They are never shown again.">
+    <Card icon={KeyRound} title={t('set.twilio')} hint={t('set.twilioHint')}>
       {status?.configured && !editing && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="flex items-center gap-2 text-[13px]">
             <CheckCircle2 className="w-4 h-4 text-success" strokeWidth={2} />
-            <span>Connected · account ending <span className="font-mono">{status.sidLast4}</span> · number <span className="tabular-nums">{status.from}</span></span>
-            {status.savedAt && <span className="text-muted-foreground">· saved {new Date(status.savedAt).toLocaleDateString('lt-LT')}</span>}
+            <span>{t('set.connected', { sid: status.sidLast4 ?? '', from: status.from ?? '' })}</span>
+            {status.savedAt && <span className="text-muted-foreground">· {t('set.savedOn', { date: new Date(status.savedAt).toLocaleDateString(locale) })}</span>}
           </p>
           <div className="flex gap-2">
-            <button onClick={test} disabled={!!busy} className="h-8 px-3 rounded-md border border-border text-[12px] font-medium hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50">{busy === 'test' ? 'Sending…' : 'Send test SMS'}</button>
-            <button onClick={() => setEditing(true)} className="h-8 px-3 rounded-md border border-border text-[12px] font-medium hover:bg-black/5 dark:hover:bg-white/5">Replace</button>
-            <button onClick={remove} disabled={!!busy} className="h-8 px-3 rounded-md text-[12px] font-medium text-danger hover:bg-danger/10 disabled:opacity-50">Remove</button>
+            <button onClick={test} disabled={!!busy} className={btn}>{busy === 'test' ? t('nd.sending') : t('set.test')}</button>
+            <button onClick={() => setEditing(true)} className={btn}>{t('set.replace')}</button>
+            <button onClick={remove} disabled={!!busy} className="h-8 px-3 rounded-md text-[12px] font-medium text-danger hover:bg-danger/10 disabled:opacity-50">{t('set.remove')}</button>
           </div>
         </div>
       )}
@@ -81,34 +84,37 @@ function TwilioCard({ sender, testTo }: { sender: string; testTo: string }) {
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={label}>Account SID</label>
+              <label className={label}>{t('set.sid')}</label>
               <input className={`${field} font-mono`} value={sid} onChange={e => setSid(e.target.value)} placeholder="AC…" autoComplete="off" />
-              <p className="text-[11px] text-muted-foreground mt-1">Starts with AC, 34 characters. From the Twilio console home page.</p>
+              <p className="text-[11px] text-muted-foreground mt-1">{t('set.sidHint')}</p>
             </div>
             <div>
-              <label className={label}>Auth token</label>
+              <label className={label}>{t('set.token')}</label>
               <input className={`${field} font-mono`} type="password" value={token} onChange={e => setToken(e.target.value)} autoComplete="new-password" />
-              <p className="text-[11px] text-muted-foreground mt-1">Next to the SID in the console. Stored encrypted.</p>
+              <p className="text-[11px] text-muted-foreground mt-1">{t('set.tokenHint')}</p>
             </div>
             <div>
-              <label className={label}>Twilio phone number</label>
+              <label className={label}>{t('set.from')}</label>
               <input className={field} value={from} onChange={e => setFrom(e.target.value)} placeholder="+15551234567" inputMode="tel" />
-              <p className="text-[11px] text-muted-foreground mt-1">Used as the sender where a name is not allowed.</p>
+              <p className="text-[11px] text-muted-foreground mt-1">{t('set.fromHint')}</p>
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={save} disabled={!!busy || !sid || !token || !from} className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-[13px] font-medium hover:opacity-90 disabled:opacity-40">{busy === 'save' ? 'Verifying…' : 'Verify and save'}</button>
-            {editing && <button onClick={() => { setEditing(false); setMsg(null) }} className="h-9 px-4 rounded-md border border-border text-[13px] font-medium hover:bg-black/5 dark:hover:bg-white/5">Cancel</button>}
+            <button onClick={save} disabled={!!busy || !sid || !token || !from} className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-[13px] font-medium hover:opacity-90 disabled:opacity-40">{busy === 'save' ? t('set.verifying') : t('set.verify')}</button>
+            {editing && <button onClick={() => { setEditing(false); setMsg(null) }} className="h-9 px-4 rounded-md border border-border text-[13px] font-medium hover:bg-black/5 dark:hover:bg-white/5">{t('common.cancel')}</button>}
           </div>
         </div>
       )}
-      {!status && <p className="text-[13px] text-muted-foreground">Checking…</p>}
+      {!status && <p className="text-[13px] text-muted-foreground">{t('set.checking')}</p>}
       {msg && <p className={`text-[12px] rounded-md px-3 py-2 ${msg.ok ? 'text-success bg-success/10' : 'text-danger bg-danger/10'}`}>{msg.text}</p>}
     </Card>
   )
 }
 
+const TPL_HINT: Record<TemplateKey, TKey> = { arrived: 'set.tplArrivedHint', repairReady: 'set.tplRepairHint', reminder: 'set.tplReminderHint' }
+
 export default function Settings({ store, onSave, onImport }: Props) {
+  const { t } = useT()
   const [s, setS] = useState<SettingsT>(store.settings)
   const [savedAt, setSavedAt] = useState(0)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -135,58 +141,60 @@ export default function Settings({ store, onSave, onImport }: Props) {
     try {
       const data = JSON.parse(await file.text()) as Partial<Store>
       if (!Array.isArray(data.orders) || data.orders.some(o => !o.id || !o.phone || !o.status)) throw new Error('not an orders file')
-      if (!confirm(`Replace the current ${store.orders.length} orders with ${data.orders.length} from this file?`)) return
+      if (!confirm(t('set.importConfirm', { cur: store.orders.length, next: data.orders.length }))) return
       onImport({ version: 1, settings: normalizeSettings(data.settings), orders: data.orders })
     } catch (e) {
-      setImportError(e instanceof Error && e.message === 'not an orders file' ? 'That file is not a MobiCentras export.' : 'Could not read that file.')
+      setImportError(e instanceof Error && e.message === 'not an orders file' ? t('set.notExport') : t('set.cantRead'))
     }
   }
 
   const done = store.orders.filter(isDone).length
   const sizeKb = Math.round(JSON.stringify(store).length / 1024)
+  const rule = (title: TKey, desc: TKey, value: number, onChange: (n: number) => void, max?: number) => (
+    <div className="flex items-center justify-between gap-4 py-3">
+      <div><div className="text-[13px] font-medium">{t(title)}</div><div className="text-[12px] text-muted-foreground">{t(desc)}</div></div>
+      <div className="flex items-center gap-2 text-[13px] text-muted-foreground"><Num value={value} onChange={onChange} max={max} /> {t('common.days')}</div>
+    </div>
+  )
 
   return (
     <div className="max-w-3xl mx-auto">
       <div className="flex items-end justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-          <p className="text-sm text-muted-foreground">Company details, the pickup SMS, and housekeeping rules</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t('set.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('set.subtitle')}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          {!dirty && savedAt > 0 && Date.now() - savedAt < 3000 && <span className="text-[12px] text-muted-foreground">Saved</span>}
+          {!dirty && savedAt > 0 && Date.now() - savedAt < 3000 && <span className="text-[12px] text-muted-foreground">{t('set.saved')}</span>}
           <button disabled={!dirty} onClick={() => { onSave(s); setSavedAt(Date.now()) }}
-            className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-[13px] font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition">Save changes</button>
+            className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-[13px] font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition">{t('set.save')}</button>
         </div>
       </div>
 
       <div className="flex flex-col gap-5">
-        <Card icon={Building2} title="Company" hint="Used in the SMS text and as the sender name">
+        <Card icon={Building2} title={t('set.company')} hint={t('set.companyHint')}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><label className={label}>Company name</label><input className={field} value={s.company.name} onChange={e => setCompany('name', e.target.value)} /></div>
-            <div><label className={label}>Phone</label><input className={field} value={s.company.phone} onChange={e => setCompany('phone', e.target.value)} inputMode="tel" /></div>
-            <div><label className={label}>Address</label><input className={field} value={s.company.address} onChange={e => setCompany('address', e.target.value)} /></div>
+            <div><label className={label}>{t('set.companyName')}</label><input className={field} value={s.company.name} onChange={e => setCompany('name', e.target.value)} /></div>
+            <div><label className={label}>{t('set.phone')}</label><input className={field} value={s.company.phone} onChange={e => setCompany('phone', e.target.value)} inputMode="tel" /></div>
+            <div><label className={label}>{t('set.address')}</label><input className={field} value={s.company.address} onChange={e => setCompany('address', e.target.value)} /></div>
             <div>
-              <label className={label}>SMS sender name</label>
+              <label className={label}>{t('set.sender')}</label>
               <input className={field} value={s.company.smsSender} maxLength={11} onChange={e => setCompany('smsSender', e.target.value.replace(/[^A-Za-z0-9]/g, ''))} />
-              <p className="text-[11px] text-muted-foreground mt-1">Up to 11 letters or digits, no spaces. Shown as the sender instead of a phone number.</p>
+              <p className="text-[11px] text-muted-foreground mt-1">{t('set.senderHint')}</p>
             </div>
           </div>
         </Card>
 
-        <Card icon={MessageSquareText} title="SMS templates" hint="Staff pick one when pressing Notify and can still edit the text before sending">
+        <Card icon={MessageSquareText} title={t('set.sms')} hint={t('set.smsHint')}>
           <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-black/5 dark:bg-white/5 text-[12px]">
-            {(Object.keys(TEMPLATE_LABEL) as TemplateKey[]).map(k => (
+            {TEMPLATE_KEYS.map(k => (
               <button key={k} type="button" onClick={() => setTpl(k)}
-                className={`h-8 rounded-md font-medium transition ${tpl === k ? 'bg-card text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{TEMPLATE_LABEL[k]}</button>
+                className={`h-8 rounded-md font-medium transition ${tpl === k ? 'bg-card text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{t(`tpl.${k}`)}</button>
             ))}
           </div>
-          <p className="text-[12px] text-muted-foreground -mt-1">
-            {tpl === 'arrived' && 'Default for the first Notify on an order.'}
-            {tpl === 'repairReady' && 'For orders that were really a repair job. Staff switch to it in the Notify dialog.'}
-            {tpl === 'reminder' && 'Default for Notify again. {days} is how long the item has been waiting.'}
-          </p>
+          <p className="text-[12px] text-muted-foreground -mt-1">{t(TPL_HINT[tpl])}</p>
           <div>
-            <label className={label}>Message</label>
+            <label className={label}>{t('set.message')}</label>
             <textarea className={`${field} h-24 py-2 resize-y`} value={s.templates[tpl]} onChange={e => setTemplate(e.target.value)} />
             <div className="flex flex-wrap gap-1.5 mt-2">
               {SMS_PLACEHOLDERS.map(p => (
@@ -197,8 +205,8 @@ export default function Settings({ store, onSave, onImport }: Props) {
           </div>
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[12px] font-medium text-muted-foreground">Preview</span>
-              <span className="text-[11px] text-muted-foreground tabular-nums">{preview.length} chars · {smsSegments(preview)} SMS</span>
+              <span className="text-[12px] font-medium text-muted-foreground">{t('set.preview')}</span>
+              <span className="text-[11px] text-muted-foreground tabular-nums">{preview.length} {t('common.chars')} · {smsSegments(preview)} SMS</span>
             </div>
             <div className="rounded-lg bg-black/[0.03] dark:bg-white/[0.04] border border-border/50 px-4 py-3 text-[13px] leading-relaxed whitespace-pre-wrap">{preview}</div>
           </div>
@@ -206,29 +214,20 @@ export default function Settings({ store, onSave, onImport }: Props) {
 
         <TwilioCard sender={store.settings.company.smsSender} testTo={store.settings.company.phone} />
 
-        <Card icon={SlidersHorizontal} title="Rules" hint="Thresholds for the dashboard and automatic cleanup">
+        <Card icon={SlidersHorizontal} title={t('set.rules')} hint={t('set.rulesHint')}>
           <div className="flex flex-col divide-y divide-border/50 -my-2">
-            <div className="flex items-center justify-between gap-4 py-3">
-              <div><div className="text-[13px] font-medium">Follow up after</div><div className="text-[12px] text-muted-foreground">Days since the SMS before an order shows as not picked up</div></div>
-              <div className="flex items-center gap-2 text-[13px] text-muted-foreground"><Num value={s.followUpDays} onChange={n => set('followUpDays', n)} max={365} /> days</div>
-            </div>
-            <div className="flex items-center justify-between gap-4 py-3">
-              <div><div className="text-[13px] font-medium">Order is late after</div><div className="text-[12px] text-muted-foreground">Days since ordering before it shows as still waiting</div></div>
-              <div className="flex items-center gap-2 text-[13px] text-muted-foreground"><Num value={s.staleDays} onChange={n => set('staleDays', n)} max={365} /> days</div>
-            </div>
-            <div className="flex items-center justify-between gap-4 py-3">
-              <div><div className="text-[13px] font-medium">Delete completed orders after</div><div className="text-[12px] text-muted-foreground">Picked up, closed and cancelled orders are removed, along with the customer's name and phone</div></div>
-              <div className="flex items-center gap-2 text-[13px] text-muted-foreground"><Num value={s.retentionDays} onChange={n => set('retentionDays', n)} /> days</div>
-            </div>
+            {rule('set.followUp', 'set.followUpDesc', s.followUpDays, n => set('followUpDays', n), 365)}
+            {rule('set.stale', 'set.staleDesc', s.staleDays, n => set('staleDays', n), 365)}
+            {rule('set.retention', 'set.retentionDesc', s.retentionDays, n => set('retentionDays', n))}
           </div>
         </Card>
 
-        <Card icon={Database} title="Data" hint="Everything lives in one file. Keep a copy.">
+        <Card icon={Database} title={t('set.data')} hint={t('set.dataHint')}>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="text-[13px] text-muted-foreground tabular-nums">{store.orders.length} orders, {done} completed · {sizeKb} KB</p>
+            <p className="text-[13px] text-muted-foreground tabular-nums">{t('set.summary', { n: store.orders.length, done, kb: sizeKb })}</p>
             <div className="flex gap-2">
-              <button onClick={exportJson} className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md border border-border text-[13px] font-medium hover:bg-black/5 dark:hover:bg-white/5 transition"><Download className="w-4 h-4" strokeWidth={1.5} /> Export</button>
-              <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md border border-border text-[13px] font-medium hover:bg-black/5 dark:hover:bg-white/5 transition"><Upload className="w-4 h-4" strokeWidth={1.5} /> Import</button>
+              <button onClick={exportJson} className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md border border-border text-[13px] font-medium hover:bg-black/5 dark:hover:bg-white/5 transition"><Download className="w-4 h-4" strokeWidth={1.5} /> {t('set.export')}</button>
+              <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md border border-border text-[13px] font-medium hover:bg-black/5 dark:hover:bg-white/5 transition"><Upload className="w-4 h-4" strokeWidth={1.5} /> {t('set.import')}</button>
               <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={e => { const f = e.target.files?.[0]; if (f) importJson(f); e.target.value = '' }} />
             </div>
           </div>
