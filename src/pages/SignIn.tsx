@@ -24,7 +24,7 @@ export default function SignIn({ onSignIn }: { onSignIn: (password: string) => P
       <DotPattern className="[mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_80%)] dark:fill-neutral-600/60" />
 
       <div className="absolute left-6 top-6 z-10 flex items-center gap-2.5 text-2xl font-bold text-foreground select-none">
-        <Logo className="size-11 rounded-xl text-lg" />
+        <Logo className="size-12 rounded-xl text-lg" />
         <span>MobiCentras<span className="text-primary">.</span></span>
       </div>
 

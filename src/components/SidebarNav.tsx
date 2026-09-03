@@ -31,7 +31,7 @@ const bottomItems = (t: T): NavItemData[] => [
 function CompanyHeader({ name, subtitle }: { name: string; subtitle: string }) {
   return (
     <div className="flex items-center gap-3 px-2 py-2 mb-4 select-none">
-      <Logo className="w-8 h-8 rounded-[6px] text-[13px]" letter={name.charAt(0)} />
+      <Logo className="w-9 h-9 rounded-[6px] text-[13px]" letter={name.charAt(0)} />
       <div className="flex flex-col overflow-hidden">
         <span className="text-[13px] font-medium leading-none mb-1 text-foreground truncate max-w-[160px]">{name}</span>
         <span className="text-[11px] text-muted-foreground leading-none">{subtitle}</span>
