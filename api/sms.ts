@@ -1,4 +1,4 @@
-import { isAuthed, json, loadTwilio, twilioSend, unauthorized } from './_lib'
+import { isAuthed, json, loadTwilio, twilioSend, unauthorized } from './_lib.js'
 
 // Sends one SMS. The browser sends the final text staff approved; credentials never leave the server.
 export async function POST(req: Request) {

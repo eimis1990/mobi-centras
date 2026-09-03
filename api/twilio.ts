@@ -1,4 +1,4 @@
-import { isAuthed, json, loadTwilio, saveTwilio, twilioVerify, unauthorized } from './_lib'
+import { isAuthed, json, loadTwilio, saveTwilio, twilioVerify, unauthorized } from './_lib.js'
 
 // Credentials are write-only: the browser only ever sees the masked status below.
 const status = async () => {

@@ -1,4 +1,4 @@
-import { Conflict, isAuthed, readFile, unauthorized, writeFile } from './_lib'
+import { Conflict, isAuthed, readFile, unauthorized, writeFile } from './_lib.js'
 
 const FILE = 'orders.json'
 

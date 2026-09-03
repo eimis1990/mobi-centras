@@ -16,7 +16,7 @@ export default function SignIn({ onSignIn }: { onSignIn: (password: string) => P
     setError(null)
     setLoading(true)
     const err = await onSignIn(password)
-    if (err) { setError(err === 'wrong' ? t('auth.wrong') : t('auth.failed')); setLoading(false) }
+    if (err) { setError(err === 'wrong' ? t('auth.wrong') : err.startsWith('failed: ') ? `${t('auth.failed')} (${err.slice(8)})` : t('auth.failed')); setLoading(false) }
   }
 
   return (
