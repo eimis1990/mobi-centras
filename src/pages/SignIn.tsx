@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { DotPattern } from '../components/DotPattern'
+import { Logo } from '../components/Logo'
 import { useT } from '../lib/i18n'
 
 export default function SignIn({ onSignIn }: { onSignIn: (password: string) => Promise<string | null> }) {
@@ -23,7 +24,7 @@ export default function SignIn({ onSignIn }: { onSignIn: (password: string) => P
       <DotPattern className="[mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_80%)] dark:fill-neutral-600/60" />
 
       <div className="absolute left-6 top-6 z-10 flex items-center gap-2.5 text-2xl font-bold text-foreground select-none">
-        <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground text-lg font-semibold">M</span>
+        <Logo className="size-11 rounded-xl text-lg" />
         <span>MobiCentras<span className="text-primary">.</span></span>
       </div>
 

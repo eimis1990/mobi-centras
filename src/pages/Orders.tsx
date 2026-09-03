@@ -59,7 +59,7 @@ export default function Orders({ orders, onSave, onDelete, onAction }: Props) {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex items-end justify-between mb-6 gap-4">
+      <div className="flex flex-wrap items-end justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{t('orders.title')}</h1>
           <p className="text-sm text-muted-foreground">{t('orders.subtitle')}</p>
@@ -82,7 +82,7 @@ export default function Orders({ orders, onSave, onDelete, onAction }: Props) {
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border border-border/60 overflow-hidden">
+      <div className="bg-card rounded-xl border border-border/60 overflow-x-auto">
         {rows.length === 0 ? (
           <p className="px-5 py-12 text-[13px] text-muted-foreground/60 text-center">{query ? t('common.noMatches') : t('common.nothingHere')}</p>
         ) : (

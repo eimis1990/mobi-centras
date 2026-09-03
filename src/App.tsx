@@ -22,7 +22,8 @@ const saveKey = { idle: null, saving: 'app.saving', saved: 'app.saved', error: '
 export default function App() {
   const { t, lang, setLang } = useT()
   const { theme, setTheme } = useTheme()
-  const [isOpen, setIsOpen] = useState(true)
+  const isDesktop = () => window.matchMedia('(min-width: 768px)').matches
+  const [isOpen, setIsOpen] = useState(isDesktop)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [notifying, setNotifying] = useState<Order | null>(null)
   const navigate = useNavigate()
@@ -45,7 +46,9 @@ export default function App() {
     if (id === 'search') return setIsSearchOpen(true)
     if (id === 'logout') return void signOut()
     navigate(id === 'dashboard' ? '/' : `/${id}`)
+    if (!isDesktop()) setIsOpen(false)
   }
+  const pickSearch = (o: Order) => { setIsSearchOpen(false); navigate(`/orders?q=${encodeURIComponent(o.phone)}&filter=all`) }
 
   const saveOrder = (o: Order) => update(s => ({ ...s, orders: s.orders.some(x => x.id === o.id) ? s.orders.map(x => (x.id === o.id ? o : x)) : [o, ...s.orders] }))
   const deleteOrder = (id: string) => update(s => ({ ...s, orders: s.orders.filter(x => x.id !== id) }))
@@ -61,7 +64,7 @@ export default function App() {
   const importStore = (next: Store) => update(() => next)
 
   const controls = (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
       <LangToggle lang={lang} onChange={setLang} label={t('app.language')} />
       <ThemeSwitch theme={theme} onChange={setTheme} label={t('app.theme')} />
     </div>
@@ -78,7 +81,9 @@ export default function App() {
 
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-card">
-      <div className={`h-full transition-all duration-300 ease-in-out shrink-0 overflow-hidden bg-card/50 border-r border-border/50 ${isOpen ? 'w-[260px] opacity-100' : 'w-0 opacity-0 border-none'}`}>
+      {isOpen && <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={() => setIsOpen(false)} />}
+      <div className={`fixed md:static inset-y-0 left-0 z-40 h-full transition-all duration-300 ease-in-out shrink-0 overflow-hidden bg-card md:bg-card/50 border-r border-border/50
+        ${isOpen ? 'w-[260px] translate-x-0 opacity-100' : 'w-[260px] -translate-x-full opacity-0 md:w-0 md:translate-x-0 md:border-none'}`}>
         <SidebarNav className="w-[260px] border-none bg-transparent" activeId={activeId} onSelect={handleSelect} company="MobiCentras" subtitle="Alytus" ordersBadge={toNotify} t={t} />
       </div>
 
@@ -87,9 +92,9 @@ export default function App() {
           <button onClick={() => setIsOpen(!isOpen)} className="p-1.5 rounded-md text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-colors" aria-label="Toggle sidebar">
             {isOpen ? <PanelLeftClose className="w-[18px] h-[18px]" strokeWidth={1.5} /> : <PanelLeftOpen className="w-[18px] h-[18px]" strokeWidth={1.5} />}
           </button>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>MobiCentras</span><span>/</span>
-            <span className="font-medium text-foreground">{titleKey[activeId] ? t(titleKey[activeId]) : t('app.notFound')}</span>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+            <span className="hidden sm:inline">MobiCentras</span><span className="hidden sm:inline">/</span>
+            <span className="font-medium text-foreground truncate">{titleKey[activeId] ? t(titleKey[activeId]) : t('app.notFound')}</span>
           </div>
           <span className={`ml-auto flex items-center gap-1.5 text-[12px] transition-opacity ${saveState === 'idle' ? 'opacity-0' : 'opacity-100'} ${saveState === 'error' || saveState === 'conflict' ? 'text-danger' : 'text-muted-foreground'}`}>
             {(saveState === 'error' || saveState === 'conflict') && <AlertTriangle className="w-3.5 h-3.5" strokeWidth={1.75} />}
@@ -98,7 +103,7 @@ export default function App() {
           {controls}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 md:p-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
           {!store ? (
             <p className="text-[13px] text-muted-foreground">{saveState === 'error' ? t('app.loadError') : t('app.loading')}</p>
           ) : (
@@ -113,7 +118,7 @@ export default function App() {
         </div>
       </div>
 
-      {isSearchOpen && <SearchOverlay onClose={() => setIsSearchOpen(false)} />}
+      {isSearchOpen && <SearchOverlay orders={orders} onPick={pickSearch} onClose={() => setIsSearchOpen(false)} />}
       {notifying && store && <NotifyDialog key={notifying.id} order={notifying} settings={store.settings} onSend={m => sendSms(notifying, m)} onClose={() => setNotifying(null)} />}
     </div>
   )

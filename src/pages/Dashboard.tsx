@@ -58,8 +58,8 @@ function StatusCard({ s, items, settings, onAction, onOpenOrders }: {
           <CheckCircle2 className="w-4 h-4 text-success" strokeWidth={2} /> {t('dash.empty')}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="aspect-square rounded-xl bg-card border border-black/5 dark:border-white/5 p-4 flex flex-col min-w-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="sm:aspect-square rounded-xl bg-card border border-black/5 dark:border-white/5 p-4 flex flex-col gap-3 sm:gap-0 min-w-0">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className={`w-9 h-9 rounded-full ${c.solid} flex items-center justify-center text-[12px] font-semibold shrink-0`}>{initials(latest.customer)}</span>
               <div className="min-w-0">
@@ -67,7 +67,7 @@ function StatusCard({ s, items, settings, onAction, onOpenOrders }: {
                 <div className="text-[11px] text-muted-foreground tabular-nums flex items-center gap-1"><Phone className="w-3 h-3" strokeWidth={1.5} />{latest.phone}</div>
               </div>
             </div>
-            <p className="mt-3 text-[13px] leading-snug line-clamp-2">{latest.product}</p>
+            <p className="sm:mt-3 text-[13px] leading-snug line-clamp-2">{latest.product}</p>
             <p className="text-[12px] text-muted-foreground mt-1 truncate">
               {t(s.verb)} {relDays(t, daysSince(s.when(latest)))}{s.extra?.(latest, t)}
               {latest.price != null && <> · {latest.price} €{latest.paid ? `, ${t('common.paid')}` : ''}</>}
@@ -77,16 +77,16 @@ function StatusCard({ s, items, settings, onAction, onOpenOrders }: {
             </button>
           </div>
 
-          <button onClick={() => onOpenOrders(s.filter)} className={`group aspect-square rounded-xl ${c.soft} transition flex flex-col items-center justify-center gap-1 p-4 text-center`}>
+          <button onClick={() => onOpenOrders(s.filter)} className={`group sm:aspect-square rounded-xl ${c.soft} transition flex sm:flex-col items-center justify-center gap-3 sm:gap-1 px-4 py-3 sm:p-4 text-center`}>
             {more > 0 ? (
               <>
-                <span className={`text-5xl font-semibold tabular-nums leading-none ${c.text}`}>+{more}</span>
-                <span className="text-[13px] text-muted-foreground mt-2">{t('dash.more', { n: more })}</span>
+                <span className={`text-3xl sm:text-5xl font-semibold tabular-nums leading-none ${c.text}`}>+{more}</span>
+                <span className="text-[13px] text-muted-foreground sm:mt-2">{t('dash.more', { n: more })}</span>
               </>
             ) : (
               <span className="text-[13px] text-muted-foreground">{t('dash.onlyOne')}</span>
             )}
-            <span className={`inline-flex items-center gap-1 text-[13px] font-medium mt-1 ${c.text}`}>
+            <span className={`inline-flex items-center gap-1 text-[13px] font-medium sm:mt-1 ${c.text}`}>
               {t('dash.seeAll')} <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2} />
             </span>
           </button>

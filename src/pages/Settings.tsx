@@ -159,7 +159,7 @@ export default function Settings({ store, onSave, onImport }: Props) {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="flex items-end justify-between mb-6 gap-4">
+      <div className="flex flex-wrap items-end justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{t('set.title')}</h1>
           <p className="text-sm text-muted-foreground">{t('set.subtitle')}</p>

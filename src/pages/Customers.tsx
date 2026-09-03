@@ -34,7 +34,7 @@ export default function Customers({ orders }: { orders: Order[] }) {
 
       <SearchInput className="max-w-sm mb-4" value={query} onChange={setQuery} placeholder={t('cust.search')} />
 
-      <div className="bg-card rounded-xl border border-border/60 overflow-hidden">
+      <div className="bg-card rounded-xl border border-border/60 overflow-x-auto">
         {rows.length === 0 ? (
           <p className="px-5 py-12 text-[13px] text-muted-foreground/60 text-center">{query ? t('common.noMatches') : t('cust.none')}</p>
         ) : (

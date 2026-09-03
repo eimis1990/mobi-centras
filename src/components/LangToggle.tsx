@@ -12,7 +12,7 @@ const FlagGB = () => (
     <g clipPath="url(#gb-clip)">
       <rect width="60" height="30" fill="#012169" />
       <path d="M0 0L60 30M60 0L0 30" stroke="#fff" strokeWidth="6" />
-      <path d="M0 0L60 30M60 0L0 30" stroke="#C8102E" strokeWidth="4" clipPath="url(#gb-clip)" />
+      <path d="M0 0L60 30M60 0L0 30" stroke="#C8102E" strokeWidth="4" />
       <path d="M30 0V30M0 15H60" stroke="#fff" strokeWidth="10" />
       <path d="M30 0V30M0 15H60" stroke="#C8102E" strokeWidth="6" />
     </g>
@@ -26,10 +26,10 @@ const LANGS: { code: Lang; name: string; Flag: () => React.JSX.Element }[] = [
 
 export function LangToggle({ lang, onChange, label }: { lang: Lang; onChange: (l: Lang) => void; label: string }) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex items-center gap-0.5 p-0.5 h-[25px] rounded-full bg-black/5 dark:bg-white/10">
+    <div role="radiogroup" aria-label={label} className="flex items-center gap-1 p-1 rounded-md bg-black/5 dark:bg-white/10">
       {LANGS.map(({ code, name, Flag }) => (
         <button key={code} role="radio" aria-checked={lang === code} title={name} onClick={() => onChange(code)}
-          className={`h-[21px] w-[30px] rounded-full overflow-hidden transition-all ${lang === code ? 'ring-2 ring-primary/60 ring-offset-1 ring-offset-background opacity-100' : 'opacity-40 hover:opacity-80'}`}>
+          className={`h-[18px] w-[26px] rounded-[3px] overflow-hidden transition-opacity ${lang === code ? 'opacity-100' : 'opacity-30 hover:opacity-70'}`}>
           <Flag />
         </button>
       ))}

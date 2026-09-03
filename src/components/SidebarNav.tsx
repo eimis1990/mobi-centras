@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Search, LayoutDashboard, ShoppingBag, Users, Settings, LogOut, ChevronRight } from 'lucide-react'
 import type { T } from '../lib/i18n'
+import { Logo } from './Logo'
 
 export type NavItemData = {
   id: string
@@ -30,9 +31,7 @@ const bottomItems = (t: T): NavItemData[] => [
 function CompanyHeader({ name, subtitle }: { name: string; subtitle: string }) {
   return (
     <div className="flex items-center gap-3 px-2 py-2 mb-4 select-none">
-      <div className="w-8 h-8 rounded-[6px] bg-primary text-primary-foreground flex items-center justify-center font-semibold text-[13px] shadow-sm">
-        {name.charAt(0)}
-      </div>
+      <Logo className="w-8 h-8 rounded-[6px] text-[13px]" letter={name.charAt(0)} />
       <div className="flex flex-col overflow-hidden">
         <span className="text-[13px] font-medium leading-none mb-1 text-foreground truncate max-w-[160px]">{name}</span>
         <span className="text-[11px] text-muted-foreground leading-none">{subtitle}</span>
