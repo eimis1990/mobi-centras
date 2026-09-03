@@ -29,7 +29,7 @@ export default function App() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const activeId = pathname.slice(1) || 'dashboard'
-  const { store, authed, saveState, update, signIn, signOut } = useStore()
+  const { store, authed, saveState, saveError, update, signIn, signOut } = useStore()
   const orders = store?.orders ?? []
   const toNotify = buckets(orders, store?.settings).toNotify.length
 
@@ -96,16 +96,16 @@ export default function App() {
             <span className="hidden sm:inline">MobiCentras</span><span className="hidden sm:inline">/</span>
             <span className="font-medium text-foreground truncate">{titleKey[activeId] ? t(titleKey[activeId]) : t('app.notFound')}</span>
           </div>
-          <span className={`ml-auto flex items-center gap-1.5 text-[12px] transition-opacity ${saveState === 'idle' ? 'opacity-0' : 'opacity-100'} ${saveState === 'error' || saveState === 'conflict' ? 'text-danger' : 'text-muted-foreground'}`}>
-            {(saveState === 'error' || saveState === 'conflict') && <AlertTriangle className="w-3.5 h-3.5" strokeWidth={1.75} />}
-            {saveKey[saveState] ? t(saveKey[saveState]) : ''}
+          <span title={saveError || undefined} className={`ml-auto flex items-center gap-1.5 text-[12px] min-w-0 transition-opacity ${saveState === 'idle' ? 'opacity-0' : 'opacity-100'} ${saveState === 'error' || saveState === 'conflict' ? 'text-danger' : 'text-muted-foreground'}`}>
+            {(saveState === 'error' || saveState === 'conflict') && <AlertTriangle className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} />}
+            <span className="truncate">{saveKey[saveState] ? t(saveKey[saveState]) : ''}{saveState === 'error' && saveError ? `: ${saveError}` : ''}</span>
           </span>
           {controls}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           {!store ? (
-            <p className="text-[13px] text-muted-foreground">{saveState === 'error' ? t('app.loadError') : t('app.loading')}</p>
+            <p className="text-[13px] text-muted-foreground">{saveState === 'error' ? `${t('app.loadError')} ${saveError}` : t('app.loading')}</p>
           ) : (
             <Routes>
               <Route path="/" element={<Dashboard orders={orders} settings={store.settings} onAction={act} onOpenOrders={f => navigate(`/orders?filter=${f}`)} />} />

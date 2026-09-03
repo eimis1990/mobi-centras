@@ -30,10 +30,14 @@ export const unauthorized = () => new Response('unauthorized', { status: 401 })
 // ---- storage: private Vercel Blob in production, .data/ files in dev ------------------
 export class Conflict extends Error {}
 const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN
+const requireStorage = () => {
+  if (!useBlob && process.env.VERCEL) throw new Error('Blob store is not connected: BLOB_READ_WRITE_TOKEN is missing. Attach a Blob store to the Vercel project and redeploy.')
+}
 const dataDir = path.resolve(process.cwd(), '.data')
 const etagOf = (s: string) => createHash('md5').update(s).digest('hex').slice(0, 16)
 
 export async function readFile(name: string): Promise<{ body: string; etag: string } | null> {
+  requireStorage()
   if (useBlob) {
     const r = await get(name, { access: 'private', useCache: false })
     return r ? { body: await new Response(r.stream).text(), etag: r.blob.etag } : null
@@ -45,6 +49,7 @@ export async function readFile(name: string): Promise<{ body: string; etag: stri
 }
 
 export async function writeFile(name: string, body: string, ifMatch?: string): Promise<string> {
+  requireStorage()
   if (useBlob) {
     try {
       await put(name, body, { access: 'private', allowOverwrite: true, contentType: 'application/json', ifMatch })

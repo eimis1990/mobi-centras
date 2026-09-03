@@ -10,6 +10,7 @@ export function useStore() {
   const [store, setStore] = useState<Store | null>(null)
   const [authed, setAuthed] = useState<boolean | null>(null)
   const [saveState, setSaveState] = useState<SaveState>('idle')
+  const [saveError, setSaveError] = useState('')
   const ref = useRef<Store | null>(null)
   const etag = useRef<string>('')
   const queue = useRef(Promise.resolve())
@@ -17,7 +18,7 @@ export function useStore() {
   const load = async () => {
     const r = await fetch('/api/orders', { cache: 'no-store' })
     if (r.status === 401) { setAuthed(false); setStore(null); ref.current = null; return }
-    if (!r.ok) throw new Error(`load failed: ${r.status}`)
+    if (!r.ok) throw new Error((await r.text()).trim() || `HTTP ${r.status}`)
     etag.current = r.headers.get('etag') ?? ''
     const data = (await r.json()) as Store | null
     const next = data ?? (import.meta.env.DEV ? { ...emptyStore(), orders: mockOrders } : emptyStore())
@@ -26,7 +27,7 @@ export function useStore() {
     setStore(next)
     setAuthed(true)
   }
-  useEffect(() => { load().catch(() => setSaveState('error')) }, [])
+  useEffect(() => { load().catch(e => { setSaveError(e instanceof Error ? e.message : String(e)); setSaveState('error') }) }, [])
 
   const signIn = async (password: string): Promise<string | null> => {
     const r = await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })
@@ -42,18 +43,19 @@ export function useStore() {
 
   const save = (next: Store) => {
     queue.current = queue.current.then(async () => {
-      setSaveState('saving')
+      setSaveState('saving'); setSaveError('')
       try {
         const headers: Record<string, string> = { 'content-type': 'application/json' }
         if (etag.current) headers['if-match'] = etag.current
         const r = await fetch('/api/orders', { method: 'PUT', headers, body: JSON.stringify(next) })
         if (r.status === 401) { setAuthed(false); return }
         if (r.status === 412) { setSaveState('conflict'); await load(); return }
-        if (!r.ok) throw new Error(String(r.status))
+        if (!r.ok) throw new Error((await r.text()).trim() || `HTTP ${r.status}`)
         etag.current = r.headers.get('etag') ?? etag.current
         setSaveState('saved')
         setTimeout(() => setSaveState(s => (s === 'saved' ? 'idle' : s)), 1500)
-      } catch {
+      } catch (e) {
+        setSaveError(e instanceof Error ? e.message : String(e))
         setSaveState('error')
       }
     })
@@ -68,5 +70,5 @@ export function useStore() {
     save(next)
   }
 
-  return { store, authed, saveState, update, reload: load, signIn, signOut }
+  return { store, authed, saveState, saveError, update, reload: load, signIn, signOut }
 }
