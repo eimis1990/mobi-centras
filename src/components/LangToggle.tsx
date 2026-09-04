@@ -41,7 +41,7 @@ export function LangToggle({ lang, onChange, label }: { lang: Lang; onChange: (l
   return (
     <div className="relative">
       <button onClick={() => setOpen(o => !o)} aria-label={label} aria-haspopup="listbox" aria-expanded={open}
-        className="h-8 pl-2 pr-1.5 inline-flex items-center gap-2 rounded-md border border-border/60 bg-card text-[13px] font-medium hover:bg-black/5 dark:hover:bg-white/5 transition">
+        className="h-8 pl-3.5 pr-3 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card text-[13px] font-medium hover:bg-black/5 dark:hover:bg-white/5 transition">
         <Flag F={current.Flag} />
         <span className="hidden sm:inline">{current.name}</span>
         <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2} />
@@ -49,7 +49,7 @@ export function LangToggle({ lang, onChange, label }: { lang: Lang; onChange: (l
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <ul role="listbox" className="absolute right-0 top-9 z-50 min-w-40 py-1 rounded-lg border border-border bg-card shadow-[0_8px_24px_rgba(0,0,0,.12)]">
+          <ul role="listbox" className="absolute right-0 top-10 z-50 min-w-40 py-1 rounded-xl border border-border bg-card shadow-[0_8px_24px_rgba(0,0,0,.12)]">
             {LANGS.map(({ code, name, Flag: F }) => (
               <li key={code}>
                 <button role="option" aria-selected={lang === code} onClick={() => { onChange(code); setOpen(false) }}

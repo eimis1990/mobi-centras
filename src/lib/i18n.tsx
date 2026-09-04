@@ -27,7 +27,7 @@ const en = {
   'dash.stale': 'Ordered, still waiting', 'dash.staleHint': '{n}+ days with no arrival',
   'dash.openRequests': 'Requests not contacted', 'dash.openRequestsHint': 'Customer is waiting for a call',
   'dash.arrived': 'arrived', 'dash.notified': 'notified', 'dash.ordered': 'ordered', 'dash.asked': 'asked',
-  'dash.more': { one: 'more customer', other: 'more customers' } as Plural, 'dash.onlyOne': 'Only one right now', 'dash.seeAll': 'See all', 'dash.empty': 'Nothing here',
+  'dash.more': { one: '+{n} more customer', other: '+{n} more customers' } as Plural, 'dash.onlyOne': 'Only one right now', 'dash.seeAll': 'See all', 'dash.empty': 'Nothing here',
 
   'orders.title': 'Orders', 'orders.subtitle': "Products ordered for customers and things they're looking for", 'orders.new': 'New order',
   'orders.search': 'Name, phone or product…', 'orders.moreActions': 'More actions',
@@ -94,7 +94,7 @@ const lt: Record<TKey, string | Plural> = {
   'dash.stale': 'Užsakyta, dar laukiama', 'dash.staleHint': '{n}+ d. be pristatymo',
   'dash.openRequests': 'Užklausos be atsakymo', 'dash.openRequestsHint': 'Klientas laukia skambučio',
   'dash.arrived': 'atvyko', 'dash.notified': 'informuota', 'dash.ordered': 'užsakyta', 'dash.asked': 'kreipėsi',
-  'dash.more': { one: 'dar vienas klientas', few: 'dar klientai', many: 'dar klientų', other: 'dar kliento' }, 'dash.onlyOne': 'Šiuo metu tik vienas', 'dash.seeAll': 'Žiūrėti visus', 'dash.empty': 'Nieko nėra',
+  'dash.more': { one: '+{n} kitas klientas', few: '+{n} kiti klientai', many: '+{n} kitų klientų', other: '+{n} kitų klientų' }, 'dash.onlyOne': 'Šiuo metu tik vienas', 'dash.seeAll': 'Žiūrėti visus', 'dash.empty': 'Nieko nėra',
 
   'orders.title': 'Užsakymai', 'orders.subtitle': 'Klientams užsakytos prekės ir jų ieškomi daiktai', 'orders.new': 'Naujas užsakymas',
   'orders.search': 'Vardas, telefonas ar prekė…', 'orders.moreActions': 'Daugiau veiksmų',

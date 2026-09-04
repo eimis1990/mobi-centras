@@ -41,8 +41,8 @@ function StatusCard({ s, items, settings, onAction, onOpenOrders }: {
   const more = items.length - 1
 
   return (
-    <section className={`rounded-2xl border p-5 ${items.length ? c.card : 'bg-card border-border/60'}`}>
-      <header className="flex items-start gap-3 mb-4">
+    <section className={`rounded-2xl border p-4 ${items.length ? c.card : 'bg-card border-border/60'}`}>
+      <header className="flex items-start gap-3 mb-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${items.length ? c.solid : 'bg-black/5 dark:bg-white/10 text-muted-foreground'}`}>
           <s.icon className="w-5 h-5" strokeWidth={1.75} />
         </div>
@@ -50,43 +50,35 @@ function StatusCard({ s, items, settings, onAction, onOpenOrders }: {
           <h2 className="text-[15px] font-semibold leading-tight">{t(s.title)}</h2>
           <p className="text-[12px] text-muted-foreground mt-0.5">{t(s.hint, { n: s.hintVar(settings) ?? '' })}</p>
         </div>
-        <span className={`text-3xl font-semibold tabular-nums leading-none ${items.length ? c.text : 'text-muted-foreground/30'}`}>{items.length}</span>
+        <span className={`text-2xl font-semibold tabular-nums leading-none ${items.length ? c.text : 'text-muted-foreground/30'}`}>{items.length}</span>
       </header>
 
       {!latest ? (
-        <div className="rounded-xl bg-black/[0.03] dark:bg-white/[0.04] px-4 py-6 text-center text-[13px] text-muted-foreground flex items-center justify-center gap-2">
+        <div className="rounded-xl bg-black/[0.03] dark:bg-white/[0.04] px-4 py-4 text-center text-[13px] text-muted-foreground flex items-center justify-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-success" strokeWidth={2} /> {t('dash.empty')}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="sm:aspect-square rounded-xl bg-card border border-black/5 dark:border-white/5 p-4 flex flex-col gap-3 sm:gap-0 min-w-0">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className={`w-9 h-9 rounded-full ${c.solid} flex items-center justify-center text-[12px] font-semibold shrink-0`}>{initials(latest.customer)}</span>
-              <div className="min-w-0">
-                <div className="text-[14px] font-semibold truncate leading-tight">{latest.customer}</div>
-                <div className="text-[11px] text-muted-foreground tabular-nums flex items-center gap-1"><Phone className="w-3 h-3" strokeWidth={1.5} />{latest.phone}</div>
+        <div className="flex flex-col gap-2">
+          <div className="rounded-xl bg-card border border-black/5 dark:border-white/5 p-3 flex items-center gap-3 min-w-0">
+            <span className={`w-9 h-9 rounded-full ${c.solid} flex items-center justify-center text-[12px] font-semibold shrink-0`}>{initials(latest.customer)}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-2 min-w-0">
+                <span className="text-[13px] font-semibold truncate">{latest.customer || '—'}</span>
+                <span className="text-[11px] text-muted-foreground tabular-nums shrink-0 hidden sm:inline-flex items-center gap-1"><Phone className="w-3 h-3" strokeWidth={1.5} />{latest.phone}</span>
+              </div>
+              <div className="text-[13px] truncate">{latest.product}</div>
+              <div className="text-[12px] text-muted-foreground truncate">
+                {t(s.verb)} {relDays(t, daysSince(s.when(latest)))}{s.extra?.(latest, t)}
+                {latest.price != null && <> · {latest.price} €{latest.paid ? `, ${t('common.paid')}` : ''}</>}
               </div>
             </div>
-            <p className="sm:mt-3 text-[13px] leading-snug line-clamp-2">{latest.product}</p>
-            <p className="text-[12px] text-muted-foreground mt-1 truncate">
-              {t(s.verb)} {relDays(t, daysSince(s.when(latest)))}{s.extra?.(latest, t)}
-              {latest.price != null && <> · {latest.price} €{latest.paid ? `, ${t('common.paid')}` : ''}</>}
-            </p>
-            <button onClick={() => s.run(latest, onAction, onOpenOrders)} className={`mt-auto h-9 w-full rounded-lg text-[13px] font-medium transition ${c.solid} hover:opacity-90`}>
+            <button onClick={() => s.run(latest, onAction, onOpenOrders)} className={`shrink-0 h-8 px-3 rounded-lg text-[12px] font-medium transition ${c.solid} hover:opacity-90`}>
               {t(s.action)}
             </button>
           </div>
-
-          <button onClick={() => onOpenOrders(s.filter)} className={`group sm:aspect-square rounded-xl ${c.soft} transition flex sm:flex-col items-center justify-center gap-3 sm:gap-1 px-4 py-3 sm:p-4 text-center`}>
-            {more > 0 ? (
-              <>
-                <span className={`text-3xl sm:text-5xl font-semibold tabular-nums leading-none ${c.text}`}>+{more}</span>
-                <span className="text-[13px] text-muted-foreground sm:mt-2">{t('dash.more', { n: more })}</span>
-              </>
-            ) : (
-              <span className="text-[13px] text-muted-foreground">{t('dash.onlyOne')}</span>
-            )}
-            <span className={`inline-flex items-center gap-1 text-[13px] font-medium sm:mt-1 ${c.text}`}>
+          <button onClick={() => onOpenOrders(s.filter)} className={`group h-9 px-3 rounded-lg ${c.soft} transition flex items-center justify-between text-[13px]`}>
+            <span className={`font-medium tabular-nums ${c.text}`}>{more > 0 ? t('dash.more', { n: more }) : t('dash.onlyOne')}</span>
+            <span className={`inline-flex items-center gap-1 ${c.text}`}>
               {t('dash.seeAll')} <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2} />
             </span>
           </button>
@@ -115,7 +107,7 @@ export default function Dashboard({ orders, settings, onAction, onOpenOrders }: 
         <p className="text-sm text-muted-foreground tabular-nums">{total === 0 ? t('dash.nothing') : t('dash.things', { n: total })}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {SECTIONS.map(s => <StatusCard key={s.key} s={s} items={b[s.key]} settings={settings} onAction={onAction} onOpenOrders={onOpenOrders} />)}
       </div>
     </div>
