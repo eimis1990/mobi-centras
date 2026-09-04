@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff } from 'lucide-react'
 import { DotPattern } from '../components/DotPattern'
 import { Logo } from '../components/Logo'
 import { useT } from '../lib/i18n'
@@ -9,6 +9,7 @@ export default function SignIn({ onSignIn }: { onSignIn: (password: string) => P
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [show, setShow] = useState(false)
   const canSubmit = password.length > 0 && !loading
 
   const submit = async (e: React.FormEvent) => {
@@ -37,9 +38,15 @@ export default function SignIn({ onSignIn }: { onSignIn: (password: string) => P
         <form onSubmit={submit} className="space-y-4" noValidate>
           <div className="space-y-1.5">
             <label htmlFor="password" className="text-sm font-medium">{t('auth.password')}</label>
-            <input id="password" type="password" autoComplete="current-password" autoFocus required value={password} onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••" disabled={loading}
-              className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/30 disabled:opacity-50" />
+            <div className="relative">
+              <input id="password" type={show ? 'text' : 'password'} autoComplete="current-password" autoCapitalize="off" autoCorrect="off" spellCheck={false} autoFocus required
+                value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" disabled={loading}
+                className="h-10 w-full rounded-md border border-border bg-background pl-3 pr-10 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/30 disabled:opacity-50" />
+              <button type="button" onClick={() => setShow(v => !v)} tabIndex={-1} aria-label={show ? 'Hide password' : 'Show password'}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-muted-foreground hover:text-foreground">
+                {show ? <EyeOff className="size-4" strokeWidth={1.5} /> : <Eye className="size-4" strokeWidth={1.5} />}
+              </button>
+            </div>
           </div>
 
           {error && <p role="alert" className="text-sm text-danger">{error}</p>}

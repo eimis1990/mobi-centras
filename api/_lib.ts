@@ -18,7 +18,9 @@ const COOKIE = 'mc_session'
 const same = (a: string, b: string) => { const x = Buffer.from(a); const y = Buffer.from(b); return x.length === y.length && timingSafeEqual(x, y) }
 // Derived from the password too, so changing the password signs everyone out.
 const sessionToken = () => createHmac('sha256', secret()).update(`session:${password()}`).digest('base64url')
-export const checkPassword = (p: string) => same(p, password())
+// Trim and NFC-normalise both sides: mobile keyboards add trailing spaces and some produce decomposed accents.
+const canon = (s: string) => s.trim().normalize('NFC')
+export const checkPassword = (p: string) => same(canon(p), canon(password()))
 export const sessionCookie = (clear = false) =>
   `${COOKIE}=${clear ? '' : sessionToken()}; Path=/; HttpOnly; SameSite=Lax; ${isDev ? '' : 'Secure; '}Max-Age=${clear ? 0 : 60 * 60 * 24 * 30}`
 export const isAuthed = (req: Request) => {
