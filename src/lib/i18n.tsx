@@ -31,6 +31,8 @@ const en = {
 
   'orders.title': 'Orders', 'orders.subtitle': "Products ordered for customers and things they're looking for", 'orders.new': 'New order',
   'orders.search': 'Name, phone or product…', 'orders.moreActions': 'More actions',
+  'orders.selected': '{n} selected', 'orders.deleteSelected': 'Delete selected', 'orders.clearSelection': 'Clear', 'orders.selectAll': 'Select all',
+  'orders.deleteManyConfirm': { one: 'Delete {n} order? This cannot be undone.', other: 'Delete {n} orders? This cannot be undone.' } as Plural,
   'orders.f.active': 'Active', 'orders.f.arrived': 'To notify', 'orders.f.notified': 'Waiting pickup', 'orders.f.ordered': 'Ordered', 'orders.f.requests': 'Requests', 'orders.f.done': 'Completed', 'orders.f.all': 'All',
   'orders.c.customer': 'Customer', 'orders.c.product': 'Product / Request', 'orders.c.price': 'Price', 'orders.c.status': 'Status', 'orders.c.age': 'Age', 'orders.c.actions': 'Actions',
 
@@ -98,6 +100,8 @@ const lt: Record<TKey, string | Plural> = {
 
   'orders.title': 'Užsakymai', 'orders.subtitle': 'Klientams užsakytos prekės ir jų ieškomi daiktai', 'orders.new': 'Naujas užsakymas',
   'orders.search': 'Vardas, telefonas ar prekė…', 'orders.moreActions': 'Daugiau veiksmų',
+  'orders.selected': 'Pasirinkta: {n}', 'orders.deleteSelected': 'Ištrinti pasirinktus', 'orders.clearSelection': 'Atšaukti', 'orders.selectAll': 'Pasirinkti visus',
+  'orders.deleteManyConfirm': { one: 'Ištrinti {n} užsakymą? Šio veiksmo atšaukti negalima.', few: 'Ištrinti {n} užsakymus? Šio veiksmo atšaukti negalima.', many: 'Ištrinti {n} užsakymų? Šio veiksmo atšaukti negalima.', other: 'Ištrinti {n} užsakymo? Šio veiksmo atšaukti negalima.' },
   'orders.f.active': 'Aktyvūs', 'orders.f.arrived': 'Informuoti', 'orders.f.notified': 'Laukia atsiėmimo', 'orders.f.ordered': 'Užsakyta', 'orders.f.requests': 'Užklausos', 'orders.f.done': 'Užbaigti', 'orders.f.all': 'Visi',
   'orders.c.customer': 'Klientas', 'orders.c.product': 'Prekė / Užklausa', 'orders.c.price': 'Kaina', 'orders.c.status': 'Būsena', 'orders.c.age': 'Sukurta', 'orders.c.actions': 'Veiksmai',
 

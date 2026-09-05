@@ -52,6 +52,7 @@ export default function App() {
 
   const saveOrder = (o: Order) => update(s => ({ ...s, orders: s.orders.some(x => x.id === o.id) ? s.orders.map(x => (x.id === o.id ? o : x)) : [o, ...s.orders] }))
   const deleteOrder = (id: string) => update(s => ({ ...s, orders: s.orders.filter(x => x.id !== id) }))
+  const deleteOrders = (ids: string[]) => { const set = new Set(ids); update(s => ({ ...s, orders: s.orders.filter(x => !set.has(x.id)) })) }
   // Notify opens a dialog; everything else transitions straight away.
   const act = (o: Order, status: Status) => (status === 'notified' ? setNotifying(o) : saveOrder(transition(o, status)))
   const sendSms = async (o: Order, message: string) => {
@@ -109,7 +110,7 @@ export default function App() {
           ) : (
             <Routes>
               <Route path="/" element={<Dashboard orders={orders} settings={store.settings} onAction={act} onOpenOrders={f => navigate(`/orders?filter=${f}`)} />} />
-              <Route path="/orders" element={<Orders orders={orders} onSave={saveOrder} onDelete={deleteOrder} onAction={act} />} />
+              <Route path="/orders" element={<Orders orders={orders} onSave={saveOrder} onDelete={deleteOrder} onDeleteMany={deleteOrders} onAction={act} />} />
               <Route path="/customers" element={<Customers orders={orders} />} />
               <Route path="/settings" element={<Settings store={store} onSave={saveSettings} onImport={importStore} />} />
               <Route path="*" element={<Placeholder title={t('app.pageNotFound')} />} />

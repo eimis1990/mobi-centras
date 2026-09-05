@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Plus, Phone, MoreHorizontal, Check } from 'lucide-react'
+import { Plus, Phone, MoreHorizontal, Check, Trash2, X } from 'lucide-react'
 import { actions, daysSince, isDone, type Order, type Status } from '../lib/orders'
 import { OrderDialog } from '../components/OrderDialog'
 import { tableCls, thCls, tdCls } from '../components/table'
@@ -8,7 +8,7 @@ import { SearchInput } from '../components/SearchInput'
 import { useT, type TKey } from '../lib/i18n'
 import { relativeAge } from './Customers'
 
-type Props = { orders: Order[]; onSave: (o: Order) => void; onDelete: (id: string) => void; onAction: (o: Order, status: Status) => void }
+type Props = { orders: Order[]; onSave: (o: Order) => void; onDelete: (id: string) => void; onDeleteMany: (ids: string[]) => void; onAction: (o: Order, status: Status) => void }
 
 const FILTERS: Record<string, { label: TKey; fn: (o: Order) => boolean }> = {
   active: { label: 'orders.f.active', fn: o => !isDone(o) },
@@ -31,13 +31,14 @@ const PILL: Record<Status, string> = {
   closed: 'bg-black/5 dark:bg-white/10 text-muted-foreground',
 }
 
-export default function Orders({ orders, onSave, onDelete, onAction }: Props) {
+export default function Orders({ orders, onSave, onDelete, onDeleteMany, onAction }: Props) {
   const { t, locale } = useT()
   const [params, setParams] = useSearchParams()
   const filter = params.get('filter') && FILTERS[params.get('filter')!] ? params.get('filter')! : 'active'
   const [query, setQuery] = useState(params.get('q') ?? '')
   const [editing, setEditing] = useState<Order | null | 'new'>(null)
   const [menuFor, setMenuFor] = useState<string | null>(null)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
   useEffect(() => {
     if (!menuFor) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenuFor(null)
@@ -54,6 +55,15 @@ export default function Orders({ orders, onSave, onDelete, onAction }: Props) {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
   }, [orders, filter, query])
 
+  const picked = rows.filter(o => selected.has(o.id))
+  const allPicked = rows.length > 0 && picked.length === rows.length
+  const toggle = (id: string) => setSelected(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n })
+  const toggleAll = () => setSelected(allPicked ? new Set() : new Set(rows.map(o => o.id)))
+  const deletePicked = () => {
+    if (!confirm(t('orders.deleteManyConfirm', { n: picked.length }))) return
+    onDeleteMany(picked.map(o => o.id))
+    setSelected(new Set())
+  }
   const counts = useMemo(() => Object.fromEntries(Object.entries(FILTERS).map(([k, f]) => [k, orders.filter(f.fn).length])), [orders])
   const short = (iso: string) => { const d = daysSince(iso); return d === 0 ? t('common.today') : `${d} ${t('common.days')}` }
 
@@ -82,6 +92,17 @@ export default function Orders({ orders, onSave, onDelete, onAction }: Props) {
         </div>
       </div>
 
+      {picked.length > 0 && (
+        <div className="flex items-center gap-3 mb-3 px-4 h-11 rounded-xl bg-primary/10 border border-primary/20 text-[13px]">
+          <span className="font-medium tabular-nums">{t('orders.selected', { n: picked.length })}</span>
+          <button onClick={deletePicked} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-danger text-white text-[12px] font-medium hover:opacity-90 transition">
+            <Trash2 className="w-3.5 h-3.5" strokeWidth={2} /> {t('orders.deleteSelected')}
+          </button>
+          <button onClick={() => setSelected(new Set())} className="ml-auto inline-flex items-center gap-1 text-[12px] text-muted-foreground hover:text-foreground">
+            <X className="w-3.5 h-3.5" strokeWidth={2} /> {t('orders.clearSelection')}
+          </button>
+        </div>
+      )}
       <div className="bg-card rounded-xl border border-border/60 overflow-x-auto">
         {rows.length === 0 ? (
           <p className="px-5 py-12 text-[13px] text-muted-foreground/60 text-center">{query ? t('common.noMatches') : t('common.nothingHere')}</p>
@@ -89,6 +110,7 @@ export default function Orders({ orders, onSave, onDelete, onAction }: Props) {
           <table className={tableCls}>
             <thead>
               <tr>
+                <th className={`${thCls} w-10`}><input type="checkbox" aria-label={t('orders.selectAll')} checked={allPicked} onChange={toggleAll} className="accent-primary w-4 h-4 block" /></th>
                 <th className={thCls}>{t('orders.c.customer')}</th>
                 <th className={thCls}>{t('orders.c.product')}</th>
                 <th className={`${thCls} text-right`}>{t('orders.c.price')}</th>
@@ -103,7 +125,8 @@ export default function Orders({ orders, onSave, onDelete, onAction }: Props) {
                 const primary = acts.find(a => a.primary)
                 const secondary = acts.filter(a => !a.primary)
                 return (
-                  <tr key={o.id} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+                  <tr key={o.id} className={`transition-colors ${selected.has(o.id) ? 'bg-primary/5' : 'hover:bg-black/[0.02] dark:hover:bg-white/[0.02]'}`}>
+                    <td className={`${tdCls} w-10`}><input type="checkbox" checked={selected.has(o.id)} onChange={() => toggle(o.id)} className="accent-primary w-4 h-4 block" /></td>
                     <td className={tdCls}>
                       <div className="font-medium">{o.customer}</div>
                       <div className="flex items-center gap-1 text-[12px] text-muted-foreground tabular-nums"><Phone className="w-3 h-3" strokeWidth={1.5} />{o.phone}</div>

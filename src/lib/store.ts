@@ -45,9 +45,19 @@ export function useStore() {
     queue.current = queue.current.then(async () => {
       setSaveState('saving'); setSaveError('')
       try {
-        const headers: Record<string, string> = { 'content-type': 'application/json' }
-        if (etag.current) headers['if-match'] = etag.current
-        const r = await fetch('/api/orders', { method: 'PUT', headers, body: JSON.stringify(next) })
+        const body = JSON.stringify(next)
+        const attempt = () => {
+          const headers: Record<string, string> = { 'content-type': 'application/json' }
+          if (etag.current) headers['if-match'] = etag.current
+          return fetch('/api/orders', { method: 'PUT', headers, body })
+        }
+        let r = await attempt()
+        if (r.status === 412) {
+          // Our tag is stale. Refresh it and retry once with the same change (single shop: last write wins).
+          const fresh = await fetch('/api/orders', { cache: 'no-store' })
+          if (fresh.ok) etag.current = fresh.headers.get('etag') ?? ''
+          r = await attempt()
+        }
         if (r.status === 401) { setAuthed(false); return }
         if (r.status === 412) { setSaveState('conflict'); await load(); return }
         if (!r.ok) throw new Error((await r.text()).trim() || `HTTP ${r.status}`)

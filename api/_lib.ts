@@ -55,12 +55,13 @@ export async function writeFile(name: string, body: string, ifMatch?: string): P
   requireStorage()
   if (useBlob) {
     try {
-      await put(name, body, { access: 'private', allowOverwrite: true, contentType: 'application/json', ifMatch })
+      // put() returns the new etag; re-reading right after a write can still serve the previous version.
+      const r = await put(name, body, { access: 'private', allowOverwrite: true, contentType: 'application/json', ifMatch })
+      return r.etag
     } catch (e) {
       if (e instanceof BlobPreconditionFailedError) throw new Conflict()
       throw e
     }
-    return (await readFile(name))?.etag ?? ''
   }
   const cur = await readFile(name)
   if (ifMatch && cur && cur.etag !== ifMatch) throw new Conflict()
