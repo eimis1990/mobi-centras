@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { emptyStore, normalizeSettings, purge, type Store } from './orders'
 import { mockOrders } from './mock'
 
-export type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict'
+export type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
 // One JSON file behind /api/orders. Whole-file read on load, whole-file write on every change.
 // ponytail: fine up to a few thousand orders; if the file ever gets slow, split by year.
@@ -12,14 +12,12 @@ export function useStore() {
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [saveError, setSaveError] = useState('')
   const ref = useRef<Store | null>(null)
-  const etag = useRef<string>('')
   const queue = useRef(Promise.resolve())
 
   const load = async () => {
     const r = await fetch('/api/orders', { cache: 'no-store' })
     if (r.status === 401) { setAuthed(false); setStore(null); ref.current = null; return }
     if (!r.ok) throw new Error((await r.text()).trim() || `HTTP ${r.status}`)
-    etag.current = r.headers.get('etag') ?? ''
     const data = (await r.json()) as Store | null
     const next = data ?? (import.meta.env.DEV ? { ...emptyStore(), orders: mockOrders } : emptyStore())
     next.settings = normalizeSettings(next.settings)
@@ -45,23 +43,9 @@ export function useStore() {
     queue.current = queue.current.then(async () => {
       setSaveState('saving'); setSaveError('')
       try {
-        const body = JSON.stringify(next)
-        const attempt = () => {
-          const headers: Record<string, string> = { 'content-type': 'application/json' }
-          if (etag.current) headers['if-match'] = etag.current
-          return fetch('/api/orders', { method: 'PUT', headers, body })
-        }
-        let r = await attempt()
-        if (r.status === 412) {
-          // Our tag is stale. Refresh it and retry once with the same change (single shop: last write wins).
-          const fresh = await fetch('/api/orders', { cache: 'no-store' })
-          if (fresh.ok) etag.current = fresh.headers.get('etag') ?? ''
-          r = await attempt()
-        }
+        const r = await fetch('/api/orders', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(next) })
         if (r.status === 401) { setAuthed(false); return }
-        if (r.status === 412) { setSaveState('conflict'); await load(); return }
         if (!r.ok) throw new Error((await r.text()).trim() || `HTTP ${r.status}`)
-        etag.current = r.headers.get('etag') ?? etag.current
         setSaveState('saved')
         setTimeout(() => setSaveState(s => (s === 'saved' ? 'idle' : s)), 1500)
       } catch (e) {

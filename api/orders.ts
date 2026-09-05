@@ -1,4 +1,4 @@
-import { Conflict, isAuthed, readFile, unauthorized, writeFile } from './_lib.js'
+import { isAuthed, readFile, unauthorized, writeFile } from './_lib.js'
 
 const FILE = 'orders.json'
 
@@ -17,10 +17,7 @@ export async function PUT(req: Request) {
   const body = await req.text()
   try { JSON.parse(body) } catch { return new Response('invalid json', { status: 400 }) }
   try {
-    const etag = await writeFile(FILE, body, req.headers.get('if-match') || undefined)
+    const etag = await writeFile(FILE, body)
     return new Response(null, { status: 204, headers: { etag } })
-  } catch (e) {
-    if (e instanceof Conflict) return new Response('conflict', { status: 412 })
-    return fail(e)
-  }
+  } catch (e) { return fail(e) }
 }

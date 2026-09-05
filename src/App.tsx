@@ -17,7 +17,7 @@ import { useT, type TKey } from './lib/i18n'
 import { buckets, transition, type Order, type Settings as SettingsT, type Status, type Store } from './lib/orders'
 
 const titleKey: Record<string, TKey> = { dashboard: 'nav.dashboard', orders: 'nav.orders', customers: 'nav.customers', settings: 'nav.settings' }
-const saveKey = { idle: null, saving: 'app.saving', saved: 'app.saved', error: 'app.saveError', conflict: 'app.conflict' } as const
+const saveKey = { idle: null, saving: 'app.saving', saved: 'app.saved', error: 'app.saveError' } as const
 
 export default function App() {
   const { t, lang, setLang } = useT()
@@ -97,8 +97,8 @@ export default function App() {
             <span className="hidden sm:inline">MobiCentras</span><span className="hidden sm:inline">/</span>
             <span className="font-medium text-foreground truncate">{titleKey[activeId] ? t(titleKey[activeId]) : t('app.notFound')}</span>
           </div>
-          <span title={saveError || undefined} className={`ml-auto flex items-center gap-1.5 text-[12px] min-w-0 transition-opacity ${saveState === 'idle' ? 'opacity-0' : 'opacity-100'} ${saveState === 'error' || saveState === 'conflict' ? 'text-danger' : 'text-muted-foreground'}`}>
-            {(saveState === 'error' || saveState === 'conflict') && <AlertTriangle className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} />}
+          <span title={saveError || undefined} className={`ml-auto flex items-center gap-1.5 text-[12px] min-w-0 transition-opacity ${saveState === 'idle' ? 'opacity-0' : 'opacity-100'} ${saveState === 'error' ? 'text-danger' : 'text-muted-foreground'}`}>
+            {saveState === 'error' && <AlertTriangle className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} />}
             <span className="truncate">{saveKey[saveState] ? t(saveKey[saveState]) : ''}{saveState === 'error' && saveError ? `: ${saveError}` : ''}</span>
           </span>
           {controls}

@@ -1,5 +1,5 @@
 // Shared server-side helpers. Files starting with "_" are not routes on Vercel.
-import { get, put, BlobPreconditionFailedError } from '@vercel/blob'
+import { get, put } from '@vercel/blob'
 import fs from 'node:fs'
 import path from 'node:path'
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
@@ -30,7 +30,6 @@ export const isAuthed = (req: Request) => {
 export const unauthorized = () => new Response('unauthorized', { status: 401 })
 
 // ---- storage: private Vercel Blob in production, .data/ files in dev ------------------
-export class Conflict extends Error {}
 // Two ways Vercel provides Blob access: a fixed token, or a store id resolved with the function's runtime OIDC identity.
 const useBlob = !!(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID)
 const requireStorage = () => {
@@ -51,20 +50,14 @@ export async function readFile(name: string): Promise<{ body: string; etag: stri
   return { body, etag: etagOf(body) }
 }
 
-export async function writeFile(name: string, body: string, ifMatch?: string): Promise<string> {
+// ponytail: last write wins. Blob's read/write etags did not agree in production, so conditional
+// writes rejected every save; for a single shop counter the concurrency risk is not worth it.
+export async function writeFile(name: string, body: string): Promise<string> {
   requireStorage()
   if (useBlob) {
-    try {
-      // put() returns the new etag; re-reading right after a write can still serve the previous version.
-      const r = await put(name, body, { access: 'private', allowOverwrite: true, contentType: 'application/json', ifMatch })
-      return r.etag
-    } catch (e) {
-      if (e instanceof BlobPreconditionFailedError) throw new Conflict()
-      throw e
-    }
+    const r = await put(name, body, { access: 'private', allowOverwrite: true, contentType: 'application/json' })
+    return r.etag
   }
-  const cur = await readFile(name)
-  if (ifMatch && cur && cur.etag !== ifMatch) throw new Conflict()
   fs.mkdirSync(dataDir, { recursive: true })
   fs.writeFileSync(path.join(dataDir, name), body)
   return etagOf(body)
